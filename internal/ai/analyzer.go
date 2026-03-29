@@ -8,11 +8,11 @@ import (
 
 // Analyzer 安全分析器
 type Analyzer struct {
-	client *Client
+	client LLMClient
 }
 
 // NewAnalyzer 创建分析器
-func NewAnalyzer(client *Client) *Analyzer {
+func NewAnalyzer(client LLMClient) *Analyzer {
 	return &Analyzer{client: client}
 }
 

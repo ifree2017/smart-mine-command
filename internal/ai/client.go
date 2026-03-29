@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+// LLMClient LLM客户端接口
+type LLMClient interface {
+	Chat(ctx context.Context, messages []ChatMessage) (string, error)
+}
+
 // Client LLM API客户端
 type Client struct {
 	baseURL string
