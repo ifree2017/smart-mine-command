@@ -1,0 +1,152 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #0a0a0f;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+nav {
+  padding: 12px 20px;
+  background: #1a1a2e;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+nav a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 15px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+nav a:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+#root > nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+#root > div:first-of-type {
+  padding-top: 52px;
+}
+
+/* Alert Overlay */
+.alert-overlay {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 320px;
+  background: rgba(10, 10, 20, 0.92);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.alert-overlay h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #aaa;
+}
+
+.alert-item {
+  padding: 8px;
+  margin: 4px 0;
+  border-radius: 4px;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  color: #eee;
+}
+
+.alert-item .location {
+  font-weight: 500;
+  flex: 1;
+}
+
+.alert-item .value {
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.alert-item .time {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+}
+
+.level-1 { background: #2d5a2d; }
+.level-2 { background: #5a7a2d; }
+.level-3 { background: #7a6a2d; }
+.level-4 { background: #7a3a2d; }
+.level-5 { background: #7a1a1a; }
+
+/* Alert Panel */
+.alert-panel {
+  padding: 20px;
+}
+
+.alert-panel h2 {
+  margin-top: 0;
+}
+
+.alert-panel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.alert-panel th,
+.alert-panel td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #333;
+  text-align: left;
+}
+
+.alert-panel th {
+  background: #1a1a2e;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.alert-panel tr.level-1 td { background: rgba(45, 90, 45, 0.3); }
+.alert-panel tr.level-2 td { background: rgba(90, 122, 45, 0.3); }
+.alert-panel tr.level-3 td { background: rgba(122, 106, 45, 0.3); }
+.alert-panel tr.level-4 td { background: rgba(122, 58, 45, 0.3); }
+.alert-panel tr.level-5 td { background: rgba(122, 26, 26, 0.3); }
+
+.alert-panel button {
+  padding: 4px 12px;
+  background: #3a3a5e;
+  border: 1px solid #5a5a8e;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.alert-panel button:hover {
+  background: #4a4a7e;
+}
+
+/* Loading state */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #888;
+}
