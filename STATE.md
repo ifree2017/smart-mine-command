@@ -43,3 +43,7 @@
 
 ## 下一步
 SDD 编写 → 架构评审 → 用户确认 → M1 启动
+
+## GitHub
+待创建仓库：https://github.com/ifree2017/smart-mine-command
+本地已提交：`3e6d10d`
