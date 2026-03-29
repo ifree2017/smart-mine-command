@@ -150,3 +150,38 @@ nav a:hover {
   padding: 40px;
   color: #888;
 }
+
+/* Command Panel */
+.command-panel, .plan-panel { padding: 20px; }
+.panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.panel-header h2 { margin: 0; }
+.btn-refresh { padding: 6px 12px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+
+.command-form { background: #1a1a2e; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+.form-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.form-row label { width: 70px; color: #aaa; }
+.form-row input, .form-row select, .form-row textarea { flex: 1; padding: 8px; background: #0a0a1a; border: 1px solid #333; color: #fff; border-radius: 4px; }
+.form-row textarea { resize: vertical; }
+.command-form button[type="submit"] { width: 100%; padding: 10px; background: #0066cc; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; }
+.command-form button[type="submit"]:disabled { background: #333; cursor: not-allowed; }
+
+.command-history table { width: 100%; border-collapse: collapse; }
+.command-history th, .command-history td { padding: 10px; border-bottom: 1px solid #333; text-align: left; }
+.command-history .content { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status { padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+.status.pending { background: #5a5a2d; }
+.status.executing { background: #2d5a5a; }
+.status.done { background: #2d5a2d; }
+.status.failed { background: #5a2d2d; }
+
+/* Plan Panel */
+.plans-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.plan-card { background: #1a1a2e; padding: 16px; border-radius: 8px; border-left: 4px solid; }
+.plan-card.level-4 { border-color: #e74c3c; }
+.plan-card.level-3 { border-color: #e67e22; }
+.plan-card.level-2 { border-color: #f1c40f; }
+.plan-card.level-1 { border-color: #2ecc71; }
+.plan-card h3 { margin: 0 0 8px; }
+.plan-card p { margin: 0 0 12px; color: #aaa; font-size: 13px; }
+.plan-actions { display: flex; gap: 8px; }
+.plan-actions button { flex: 1; padding: 6px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }

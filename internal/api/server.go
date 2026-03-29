@@ -14,6 +14,8 @@ import (
 	"smart-mine-command/internal/eventbus"
 	"smart-mine-command/internal/model"
 	"smart-mine-command/internal/store"
+
+	"smart-mine-command/internal/api/handler"
 )
 
 var upgrader = websocket.Upgrader{
@@ -23,10 +25,12 @@ var upgrader = websocket.Upgrader{
 }
 
 type Server struct {
-	engine  *gin.Engine
-	eb      *eventbus.EventBus
-	store   *store.Store
-	disp    *dispatch.Dispatcher
+	engine    *gin.Engine
+	eb        *eventbus.EventBus
+	store     *store.Store
+	disp      *dispatch.Dispatcher
+	executor  *dispatch.CommandExecutor
+	cmdHandler *handler.CommandHandler
 }
 
 func NewServer(eb *eventbus.EventBus, s *store.Store, disp *dispatch.Dispatcher) *Server {
@@ -34,11 +38,16 @@ func NewServer(eb *eventbus.EventBus, s *store.Store, disp *dispatch.Dispatcher)
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 
+	executor := dispatch.NewCommandExecutor(eb)
+	cmdHandler := handler.NewCommandHandler(executor, s)
+
 	srv := &Server{
-		engine: engine,
-		eb:     eb,
-		store:  s,
-		disp:   disp,
+		engine:    engine,
+		eb:        eb,
+		store:     s,
+		disp:      disp,
+		executor:  executor,
+		cmdHandler: cmdHandler,
 	}
 
 	engine.GET("/health", srv.handleHealth)
@@ -48,8 +57,9 @@ func NewServer(eb *eventbus.EventBus, s *store.Store, disp *dispatch.Dispatcher)
 	api.GET("/alerts", srv.handleListAlerts)
 	api.POST("/alerts", srv.handleCreateAlert)
 	api.POST("/alerts/ack/:id", srv.handleAckAlert)
-	api.GET("/commands", srv.handleListCommands)
-	api.POST("/commands", srv.handleCreateCommand)
+	api.GET("/commands", srv.cmdHandler.List)
+	api.POST("/commands", srv.cmdHandler.Create)
+	api.GET("/commands/:id", srv.cmdHandler.Get)
 
 	return srv
 }
@@ -106,37 +116,6 @@ func (s *Server) handleAckAlert(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"id": id, "status": "acknowledged"})
-}
-
-func (s *Server) handleListCommands(c *gin.Context) {
-	cmds, err := s.store.ListCommands()
-	if err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(200, cmds)
-}
-
-func (s *Server) handleCreateCommand(c *gin.Context) {
-	var cmd model.Command
-	if err := c.ShouldBindJSON(&cmd); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-	cmd.ID = uuid.New().String()
-	if cmd.Status == "" {
-		cmd.Status = "pending"
-	}
-	if err := s.store.SaveCommand(&cmd); err != nil {
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-	s.eb.Publish(eventbus.Event{
-		Type:   eventbus.EventTypeCommand,
-		Source: "manual",
-		Data:   map[string]interface{}{"command": cmd},
-	})
-	c.JSON(200, cmd)
 }
 
 func (s *Server) handleWS(c *gin.Context) {
