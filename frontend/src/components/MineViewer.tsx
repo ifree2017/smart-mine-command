@@ -55,6 +55,19 @@ export interface Alert {
   value: number; unit: string; level: number; status: string; createdAt: string
 }
 
+function SparklineMini({ data, color }: { data: number[]; color: string }) {
+  if (data.length < 2) return <div style={{ width: 60, height: 24 }} />
+  const w = 60, h = 24
+  const min = Math.min(...data), max = Math.max(...data)
+  const range = max - min || 1
+  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ')
+  return (
+    <svg width={w} height={h} style={{ display: 'block' }}>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" />
+    </svg>
+  )
+}
+
 function Gauge({ value, max, label, unit, color, level }: { value: number; max: number; label: string; unit: string; color: string; level: number }) {
   const pct = Math.min(value / max, 1)
   const cx = 50, cy = 50, r = 40
@@ -198,13 +211,14 @@ export default function MineViewer() {
 
   useEffect(() => {
     if (!demoMode) return
-    const init: Sensor[] = MONITOR_POINTS.map(pt => {
-      const gas = GAS_TYPES[Math.floor(Math.random() * GAS_TYPES.length)]
-      const base = gas.thresholds[0] * (0.2 + Math.random() * 0.5)
-      const val = Number(base.toFixed(gas.code === 'CO' || gas.code === 'O2' ? 1 : 2))
-      const hist = Array.from({ length: 20 }, () => val * (0.8 + Math.random() * 0.4))
-      return { id: pt.id + '_' + gas.code, pointId: pt.id, pointName: pt.name, gasCode: gas.code, gasName: gas.name, unit: gas.unit, value: val, level: getLevel(gas.code, val), history: hist, trend: ('stable') }
-    })
+    const init: Sensor[] = MONITOR_POINTS.flatMap(pt =>
+      GAS_TYPES.map(gas => {
+        const base = gas.thresholds[0] * (0.2 + Math.random() * 0.5)
+        const val = Number(base.toFixed(gas.code === 'CO' || gas.code === 'O2' ? 1 : 2))
+        const hist = Array.from({ length: 20 }, () => val * (0.8 + Math.random() * 0.4))
+        return { id: pt.id + '_' + gas.code, pointId: pt.id, pointName: pt.name, gasCode: gas.code, gasName: gas.name, unit: gas.unit, value: val, level: getLevel(gas.code, val), history: hist, trend: ('stable') as 'up' | 'down' | 'stable' }
+      })
+    )
     setSensors(init)
     const iv = setInterval(() => {
       setTime(new Date())
@@ -218,7 +232,7 @@ export default function MineViewer() {
           const trend: 'up' | 'down' | 'stable' = v > s.history[s.history.length - 1] ? 'up' : v < s.history[s.history.length - 1] ? 'down' : 'stable'
           return { ...s, value: v, level: getLevel(s.gasCode, v), history: hist, trend }
         })
-        setStats({ total: next.length, normal: next.filter(s => s.level <= 2).length, warning: next.filter(s => s.level === 3).length, danger: next.filter(s => s.level >= 4).length, offline: 0 })
+        setStats({ total: MONITOR_POINTS.length, normal: MONITOR_POINTS.filter(pt => next.filter(s => s.pointId === pt.id).every(s => s.level <= 2)).length, warning: MONITOR_POINTS.filter(pt => next.some(s => s.pointId === pt.id && s.level === 3)).length, danger: MONITOR_POINTS.filter(pt => next.some(s => s.pointId === pt.id && s.level >= 4)).length, offline: 0 })
         if (Math.random() < 0.18) {
           const s = next[Math.floor(Math.random() * next.length)]
           if (s.level >= 3) {
@@ -269,23 +283,23 @@ export default function MineViewer() {
       <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
 
       {/* TOP BAR */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 52, background: 'rgba(5,8,16,0.95)', borderBottom: '1px solid rgba(59,130,246,0.25)', display: 'flex', alignItems: 'center', padding: '0 16px', gap: 20, zIndex: 20, backdropFilter: 'blur(12px)' }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: '#3b82f6', letterSpacing: 1 }}>🕳️ 智慧矿山综合监控平台</div>
-        <div style={{ fontSize: 11, color: '#374151' }}>|</div>
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 52, background: 'rgba(255,255,255,0.97)', borderBottom: '1px solid rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', padding: '0 16px', gap: 20, zIndex: 20, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: '#1d4ed8', letterSpacing: 1 }}>🕳️ 智慧矿山综合监控平台</div>
+        <div style={{ fontSize: 11, color: '#9ca3af' }}>|</div>
         <div style={{ fontSize: 11, color: '#6b7280' }}>{time.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })} {time.toLocaleTimeString('zh-CN')}</div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 24, fontSize: 12 }}>
-          {[{ label: '监测点', value: stats.total, color: '#60a5fa' }, { label: '正常', value: stats.normal, color: '#22c55e' }, { label: '预警', value: stats.warning, color: '#eab308' }, { label: '危险', value: stats.danger, color: '#ef4444' }, { label: '离线', value: stats.offline, color: '#6b7280' }].map((s, i) => (
+          {[{ label: '监测点', value: stats.total, color: '#3b82f6' }, { label: '正常', value: stats.normal, color: '#16a34a' }, { label: '预警', value: stats.warning, color: '#ca8a04' }, { label: '危险', value: stats.danger, color: '#dc2626' }, { label: '离线', value: stats.offline, color: '#9ca3af' }].map((s, i) => (
             <div key={i} style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 18, fontWeight: 700, color: s.color, lineHeight: 1.2 }}>{s.value}</div>
-              <div style={{ fontSize: 10, color: '#4b5563' }}>{s.label}</div>
+              <div style={{ fontSize: 10, color: '#6b7280' }}>{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* LEFT: Gas gauges */}
-      <div style={{ position: 'absolute', top: 62, left: 12, width: 410, background: 'rgba(5,8,16,0.92)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, backdropFilter: 'blur(12px)', padding: '10px 12px', zIndex: 10 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#3b82f6', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(59,130,246,0.15)' }}>📊 气体监测总览</div>
+      <div style={{ position: 'absolute', top: 62, left: 12, width: 410, background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '10px 12px', zIndex: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#1d4ed8', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(59,130,246,0.2)' }}>📊 气体监测总览</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
           {GAS_TYPES.map(g => {
             const rel = sensors.filter(s => s.gasCode === g.code)
@@ -297,45 +311,50 @@ export default function MineViewer() {
       </div>
 
       {/* LEFT BOTTOM: Sensor table */}
-      <div style={{ position: 'absolute', bottom: 12, left: 12, width: 410, background: 'rgba(5,8,16,0.92)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: 12, backdropFilter: 'blur(12px)', padding: '10px 12px', zIndex: 10, maxHeight: 280, overflowY: 'auto' }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#3b82f6', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>📡 {sensors.length} 个监测点</span>
-          <button onClick={triggerAlert} style={{ fontSize: 10, padding: '2px 8px', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 4, color: '#ef4444', cursor: 'pointer' }}>🚨 模拟报警</button>
+      <div style={{ position: 'absolute', bottom: 12, left: 12, width: 410, background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '10px 12px', zIndex: 10, maxHeight: 280, overflowY: 'auto', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#1d4ed8', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>📡 {MONITOR_POINTS.length} 个监测点</span>
+          <button onClick={triggerAlert} style={{ fontSize: 10, padding: '2px 8px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 4, color: '#dc2626', cursor: 'pointer' }}>🚨 模拟报警</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
-          {sensors.map(s => (
-            <div key={s.id} onClick={() => setSelectedPoint(selectedPoint === s.pointId ? null : s.pointId)} style={{
-              padding: '5px 7px', borderRadius: 6, cursor: 'pointer',
-              background: selectedPoint === s.pointId ? 'rgba(59,130,246,0.12)' : 'rgba(255,255,255,0.02)',
-              border: `1px solid ${selectedPoint === s.pointId ? 'rgba(59,130,246,0.5)' : s.level >= 4 ? levelColor(s.level) + '44' : 'rgba(255,255,255,0.04)'}`,
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: '#4f8eff' }}>{s.pointId}</span>
-                <span style={{ fontSize: 9, color: levelColor(s.level), fontWeight: 700 }}>{levelLabel(s.level)}</span>
+          {MONITOR_POINTS.map(pt => {
+            const ptSensors = sensors.filter(s => s.pointId === pt.id)
+            const worst = ptSensors.reduce((a, b) => a.level > b.level ? a : b, ptSensors[0])
+            const hasAlert = ptSensors.some(s => s.level >= 4)
+            return (
+              <div key={pt.id} onClick={() => setSelectedPoint(selectedPoint === pt.id ? null : pt.id)} style={{
+                padding: '5px 7px', borderRadius: 8, cursor: 'pointer',
+                background: selectedPoint === pt.id ? '#eff6ff' : hasAlert ? '#fef2f2' : '#f8fafc',
+                border: `1px solid ${selectedPoint === pt.id ? '#93c5fd' : hasAlert ? '#fecaca' : '#e5e7eb'}`,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#1d4ed8' }}>{pt.id}</span>
+                  <span style={{ fontSize: 9, color: levelColor(worst?.level ?? 1), fontWeight: 700 }}>{levelLabel(worst?.level ?? 1)}</span>
+                </div>
+                <div style={{ fontSize: 9, color: '#6b7280', marginBottom: 2 }}>{pt.name}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: levelColor(worst?.level ?? 1), fontFamily: 'monospace' }}>{fmt(worst?.value ?? 0)}<span style={{ fontSize: 8, marginLeft: 1 }}>{worst?.unit}</span></span>
+                  <span style={{ fontSize: 9 }}>{worst?.trend === 'up' ? '↑' : worst?.trend === 'down' ? '↓' : '→'}</span>
+                </div>
               </div>
-              <div style={{ fontSize: 9, color: '#6b7280', marginBottom: 2 }}>{s.gasName}</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: levelColor(s.level), fontFamily: 'monospace' }}>{fmt(s.value)}<span style={{ fontSize: 8, marginLeft: 1 }}>{s.unit}</span></span>
-                <span style={{ fontSize: 9 }}>{s.trend === 'up' ? '↑' : s.trend === 'down' ? '↓' : '→'}</span>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
       {/* RIGHT TOP: Alert panel */}
-      <div style={{ position: 'absolute', top: 62, right: 12, width: 310, background: 'rgba(5,8,16,0.92)', border: '1px solid rgba(249,115,22,0.2)', borderRadius: 12, backdropFilter: 'blur(12px)', padding: '10px 12px', zIndex: 10, maxHeight: 300, overflowY: 'auto' }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#f97316', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(249,115,22,0.15)' }}>
+      <div style={{ position: 'absolute', top: 62, right: 12, width: 310, background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 12, padding: '10px 12px', zIndex: 10, maxHeight: 300, overflowY: 'auto', boxShadow: '0 4px 16px rgba(0,0,0,0.08)' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: '#c2410c', marginBottom: 8, paddingBottom: 6, borderBottom: '1px solid rgba(249,115,22,0.2)' }}>
           🚨 报警记录 ({alerts.length})
         </div>
-        {alerts.length === 0 && <div style={{ color: '#374151', fontSize: 12, textAlign: 'center', padding: '16px 0' }}>暂无报警</div>}
+        {alerts.length === 0 && <div style={{ color: '#9ca3af', fontSize: 12, textAlign: 'center', padding: '16px 0' }}>暂无报警</div>}
         {alerts.slice(0, 30).map(a => (
-          <div key={a.id} style={{ padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.04)', borderLeft: `3px solid ${levelColor(a.level)}`, paddingLeft: 8, marginBottom: 4 }}>
+          <div key={a.id} style={{ padding: '6px 0', borderBottom: '1px solid #f3f4f6', borderLeft: `3px solid ${levelColor(a.level)}`, paddingLeft: 8, marginBottom: 4 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11 }}>
-              <span style={{ color: '#9ca3af' }}>{a.pointName}</span>
+              <span style={{ color: '#374151' }}>{a.pointName}</span>
               <span style={{ color: levelColor(a.level), fontWeight: 700 }}>{a.gasName} {fmt(a.value)}{a.unit}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#4b5563', marginTop: 2 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#6b7280', marginTop: 2 }}>
               <span>{levelLabel(a.level)}</span>
               <span>{new Date(a.createdAt).toLocaleTimeString()}</span>
             </div>
@@ -343,16 +362,52 @@ export default function MineViewer() {
         ))}
       </div>
 
+      {/* DETAIL PANEL */}
+      {selectedPoint && (() => {
+        const ptSensors = sensors.filter(s => s.pointId === selectedPoint)
+        const pt = MONITOR_POINTS.find(p => p.id === selectedPoint)
+        return (
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 480, background: 'rgba(255,255,255,0.98)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: 16, padding: '20px 24px', zIndex: 30, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#1d4ed8' }}>{selectedPoint}</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>{pt?.name}</div>
+              </div>
+              <button onClick={() => setSelectedPoint(null)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#9ca3af', padding: '0 4px' }}>✕</button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 16 }}>
+              {ptSensors.map(s => (
+                <div key={s.id} style={{ background: '#f8fafc', border: `1px solid ${s.level >= 4 ? '#fecaca' : '#e5e7eb'}`, borderRadius: 10, padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <span style={{ fontSize: 12, color: '#374151', fontWeight: 600 }}>{s.gasName}</span>
+                    <span style={{ fontSize: 10, padding: '1px 6px', background: s.level >= 4 ? '#fef2f2' : s.level === 3 ? '#fefce8' : '#f0fdf4', color: levelColor(s.level), borderRadius: 4, fontWeight: 700 }}>{levelLabel(s.level)}</span>
+                  </div>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: levelColor(s.level), fontFamily: 'monospace' }}>{fmt(s.value)} <span style={{ fontSize: 11, fontWeight: 400, color: '#6b7280' }}>{s.unit}</span></div>
+                  <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <SparklineMini data={s.history} color={levelColor(s.level)} />
+                    <span style={{ fontSize: 10, color: '#9ca3af' }}>{s.trend === 'up' ? '↑ 上升' : s.trend === 'down' ? '↓ 下降' : '→ 平稳'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={triggerAlert} style={{ flex: 1, padding: '8px 0', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#dc2626', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>🚨 模拟报警</button>
+              <button onClick={() => setSelectedPoint(null)} style={{ flex: 1, padding: '8px 0', background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8, color: '#1d4ed8', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>关闭</button>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* BOTTOM RIGHT: Legend */}
-      <div style={{ position: 'absolute', bottom: 12, right: 12, width: 180, background: 'rgba(5,8,16,0.88)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8, backdropFilter: 'blur(8px)', padding: '10px 14px', fontSize: 11, color: '#6b7280', zIndex: 10 }}>
-        <div style={{ marginBottom: 6, fontWeight: 600, color: '#4b5563' }}>图例</div>
-        {[['#22c55e', '正常'], ['#84cc16', '关注'], ['#eab308', '警戒'], ['#f97316', '警告'], ['#ef4444', '危险']].map(([c, l]) => (
+      <div style={{ position: 'absolute', bottom: 12, right: 12, width: 180, background: 'rgba(255,255,255,0.96)', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 8, padding: '10px 14px', fontSize: 11, color: '#374151', zIndex: 10, boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
+        <div style={{ marginBottom: 6, fontWeight: 600, color: '#6b7280' }}>图例</div>
+        {[['#16a34a', '正常'], ['#65a30d', '关注'], ['#ca8a04', '警戒'], ['#c2410c', '警告'], ['#dc2626', '危险']].map(([c, l]) => (
           <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: c, boxShadow: `0 0 5px ${c}` }} />
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: c }} />
             {l}
           </div>
         ))}
-        <div style={{ marginTop: 8, color: '#374151', fontSize: 10 }}>🖱️ 拖拽旋转 · 滚轮缩放</div>
+        <div style={{ marginTop: 8, color: '#9ca3af', fontSize: 10 }}>🖱️ 拖拽旋转 · 滚轮缩放</div>
       </div>
 
     </div>
