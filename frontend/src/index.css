@@ -185,3 +185,35 @@ nav a:hover {
 .plan-card p { margin: 0 0 12px; color: #aaa; font-size: 13px; }
 .plan-actions { display: flex; gap: 8px; }
 .plan-actions button { flex: 1; padding: 6px; background: #333; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+
+/* AI Panel */
+.ai-panel { padding: 20px; max-width: 800px; margin: 0 auto; }
+.ai-form { background: #1a1a2e; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+.ai-form .form-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ai-form label { width: 80px; color: #aaa; }
+.ai-form input, .ai-form select { flex: 1; padding: 8px; background: #0a0a1a; border: 1px solid #333; color: #fff; border-radius: 4px; }
+.ai-form button[type="submit"] { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 15px; }
+.ai-form button[type="submit"]:disabled { background: #333; cursor: not-allowed; }
+
+.analysis-result { background: #1a1a2e; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid; }
+.analysis-result.level-1 { border-color: #2ecc71; }
+.analysis-result.level-2 { border-color: #f1c40f; }
+.analysis-result.level-3 { border-color: #e67e22; }
+.analysis-result.level-4 { border-color: #e74c3c; }
+.analysis-result.level-5 { border-color: #8e44ad; }
+
+.result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.result-header h3 { margin: 0; }
+.risk-badge { font-size: 16px; }
+.summary { font-size: 15px; line-height: 1.6; margin-bottom: 12px; }
+.factors ul { margin: 4px 0; padding-left: 20px; }
+.factors li { color: #ccc; margin: 4px 0; }
+.recommendation { background: #0a0a1a; padding: 12px; border-radius: 4px; margin-top: 12px; }
+
+.recommended-plans { background: #1a1a2e; padding: 20px; border-radius: 8px; }
+.recommended-plans h3 { margin: 0 0 12px; }
+.plan-item { background: #0a0a1a; padding: 12px; border-radius: 6px; margin-bottom: 10px; }
+.plan-item h4 { margin: 0 0 4px; }
+.plan-item p { margin: 0 0 8px; color: #aaa; font-size: 13px; }
+.plan-commands { display: flex; gap: 6px; flex-wrap: wrap; }
+.cmd-tag { background: #333; padding: 2px 8px; border-radius: 4px; font-size: 12px; }

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 
+	"smart-mine-command/internal/ai"
 	"smart-mine-command/internal/dispatch"
 	"smart-mine-command/internal/eventbus"
 	"smart-mine-command/internal/model"
@@ -25,12 +26,13 @@ var upgrader = websocket.Upgrader{
 }
 
 type Server struct {
-	engine    *gin.Engine
-	eb        *eventbus.EventBus
-	store     *store.Store
-	disp      *dispatch.Dispatcher
-	executor  *dispatch.CommandExecutor
+	engine     *gin.Engine
+	eb         *eventbus.EventBus
+	store      *store.Store
+	disp       *dispatch.Dispatcher
+	executor   *dispatch.CommandExecutor
 	cmdHandler *handler.CommandHandler
+	aiHandler  *handler.AIHandler
 }
 
 func NewServer(eb *eventbus.EventBus, s *store.Store, disp *dispatch.Dispatcher) *Server {
@@ -41,13 +43,20 @@ func NewServer(eb *eventbus.EventBus, s *store.Store, disp *dispatch.Dispatcher)
 	executor := dispatch.NewCommandExecutor(eb)
 	cmdHandler := handler.NewCommandHandler(executor, s)
 
+	// 初始化AI组件
+	aiClient := ai.NewClient("https://api.openai.com/v1", "")
+	analyzer := ai.NewAnalyzer(aiClient)
+	recommender := ai.NewRecommender(analyzer)
+	aiHandler := handler.NewAIHandler(analyzer, recommender)
+
 	srv := &Server{
-		engine:    engine,
-		eb:        eb,
-		store:     s,
-		disp:      disp,
-		executor:  executor,
+		engine:     engine,
+		eb:         eb,
+		store:      s,
+		disp:       disp,
+		executor:   executor,
 		cmdHandler: cmdHandler,
+		aiHandler:  aiHandler,
 	}
 
 	engine.GET("/health", srv.handleHealth)
@@ -60,6 +69,9 @@ func NewServer(eb *eventbus.EventBus, s *store.Store, disp *dispatch.Dispatcher)
 	api.GET("/commands", srv.cmdHandler.List)
 	api.POST("/commands", srv.cmdHandler.Create)
 	api.GET("/commands/:id", srv.cmdHandler.Get)
+
+	api.POST("/ai/analyze", srv.aiHandler.Analyze)
+	api.POST("/ai/recommend", srv.aiHandler.Recommend)
 
 	return srv
 }
