@@ -64,7 +64,7 @@ function Gauge({ value, max, label, unit, color, level }: { value: number; max: 
   const large = pct > 0.375 ? 1 : 0
   const d = pct < 0.002 ? `M${cx},${cy - r} A${r},${r} 0 0,1 ${cx},${cy - r}` : `M${cx},${cy - r} A${r},${r} 0 ${large},1 ${ex},${ey}`
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 4px', background: '#0d1117', border: `1px solid ${level >= 3 ? levelColor(level) + '44' : '#1e2535'}`, borderRadius: 8, minWidth: 82 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 4px', background: '#f8fafc', border: `1px solid ${level >= 3 ? levelColor(level) + '44' : '#1e2535'}`, borderRadius: 8, minWidth: 82 }}>
       <svg width="100" height="66" viewBox="0 0 100 66" style={{ overflow: 'visible' }}>
         <path d={`M${cx},${cy - r} A${r},${r} 0 1,1 ${cx + 0.01},${cy - r}`} fill="none" stroke="#1e2535" strokeWidth="7" strokeLinecap="round" />
         {pct >= 0.002 && <path d={d} fill="none" stroke={color} strokeWidth="7" strokeLinecap="round" style={{ filter: `drop-shadow(0 0 4px ${color}80)` }} />}
@@ -101,8 +101,8 @@ export default function MineViewer() {
     const mount = mountRef.current!
     const W = mount.clientWidth, H = mount.clientHeight
     const scene = new THREE.Scene()
-    scene.background = new THREE.Color(0x050810)
-    scene.fog = new THREE.FogExp2(0x050810, 0.004)
+    scene.background = new THREE.Color(0xd8e8f0)
+    scene.fog = new THREE.FogExp2(0xd8e8f0, 0.004)
     sceneRef.current = scene
 
     const camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 1200)
@@ -265,7 +265,7 @@ export default function MineViewer() {
   }, [add3DMarker])
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100vh', background: '#050810', overflow: 'hidden', fontFamily: '"PingFang SC","Microsoft YaHei",sans-serif' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100vh', background: '#f0f4f8', overflow: 'hidden', fontFamily: '"PingFang SC","Microsoft YaHei",sans-serif' }}>
       <div ref={mountRef} style={{ width: '100%', height: '100%' }} />
 
       {/* TOP BAR */}
